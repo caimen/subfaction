@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>SubFaction - The Political/Trade Simulator</title>
+<link rel="stylesheet" href="styles/main.css?id=7">
+<link rel="stylesheet" href="styles/style.css?id=1">
+<link rel="stylesheet" href="scripts/jquery-ui-1.11.0.custom/jquery-ui.min.css">
+<link rel="stylesheet" href="scripts/jquery-ui-1.11.0.custom/jquery-ui.theme.min">
+<link rel="stylesheet" href="scripts/jquery-ui-1.11.0.custom/jquery-ui.structure.min">
+<script type="text/javascript" src="scripts/jquery-ui-1.11.0.custom/external/jquery/jquery.js"></script>
+<script type="text/javascript" src="scripts/jquery-ui-1.11.0.custom/jquery-ui.min.js"></script>
+<script type="text/javascript" src="scripts/jquery.tablesorter.min.js"></script>
+<script type="text/javascript" src="scripts/chance.js"></script>
+<script type="text/javascript" src="scripts/subfaction/player.js"></script>
+<script type="text/javascript" src="scripts/subfaction/system.js"></script>
+<script type="text/javascript" src="scripts/subfaction/planet.js"></script>
+<script type="text/javascript" src="scripts/subfaction/city.js"></script>
+<script type="text/javascript" src="scripts/subfaction/location.js"></script>
+<script type="text/javascript" src="scripts/subfaction/item.js"></script>
+<script type="text/javascript" src="scripts/subfaction/ship.js"></script>
+<script type="text/javascript" src="scripts/subfaction/genesis.js"></script>
+<script type="text/javascript">
+var console_debug_verbose = false;
+//Global Objects
+var game = Object();
+var players = [];
+var systems = [];
+var planets = [];
+var sectors = [];
+var cities = [];
+var locations = [];
+var ships = [];
+var items = [];
+var item_types = [];//Kind of our database of basic items
+$( document ).ready(function() {//All Systems Go
+	//UI SETUP
+	$("#tabs").tabs();
+	
+	//GAME START
+	setInterval(function(){gameLoop()},5000);
+});
+
+function gameLoop() {
+    if (game.tick === undefined) {
+        genesis();
+    }
+	
+	//AI
+	for (var p = 0; p < players.length; p++) {
+		players[p].AI();
+	}
+	
+    game.tick++;
+    //console.log("Game Tick: " + game.tick);
+    $("#tick").fadeIn("fast").html(game.tick);
+}
+
+function look() {
+	output("You look around you, you are at " + players[0].fulllocationString() + ".");
+	locations[players[0].location].outputPlayersString();
+}
+
+function score() {
+	output("Name: " + players[0].first_name + " " + players[0].last_name);
+	output("Credits: " + players[0].credits);
+	output("Location[" + players[0].location + "]: " + players[0].locationString());
+	output("City: " + players[0].cityString());
+	output("Planet: " + players[0].planetString());
+	output("System: " + players[0].systemString());
+}
+
+function who_richest() {
+	var plist = players;
+	plist.sort(function(a,b) { return parseFloat(a.credits) - parseFloat(b.credits) } );
+	for (var x = plist.length-20; x <= plist.length - 1; x++) {
+		output("Credits: " + plist[x].credits + " " + plist[x].first_name + " " + plist[x].last_name);
+	}
+	output("Top 20 richest characters in the universe out of " + players.length);
+}
+
+function directory(args) {
+	output("Welcome to the universal directory");
+	if (args === undefined) {
+		output("Use directory %ltplayer name/partial name&gt;");
+	}
+	else {		
+		var searchString = args[1].toString();
+		if (args[2] !== undefined) {
+			searchString = args[1].toString() + " " + args[2].toString();
+		}
+		if (searchString.length < 4) {
+			output("Please search for at least 4 characters");
+			return;
+		}
+		output("Searching for " + searchString + "...");
+		var found = 0;
+		var out = "";
+		for (var x = 0; x < players.length; x++) {
+			if (players[x].name.toLowerCase().indexOf(searchString) >= 0) {
+				output("[" + x + "] " + players[x].name);
+				found++;
+			}
+			/*if (found > 50) {
+				out += "Over 50 people found. Please narrow search";
+				output(out);
+				break;
+			}*/
+		}
+		if (found == 1) { output("Found " + found + " person."); } else { output("Found " + found + " people."); }
+	}
+}
+
+function navigation() {
+	output("Navigation Systems");
+	output("Star Systems: " + systems.length);
+	output("Planets: " + planets.length);
+	output("Cities: " + cities.length);
+	output("Locations: " + locations.length);
+}
+
+function generate_name(type) {
+	if ("male_first_name") {
+		return chance.first();
+	}
+	else if ("male_last_name") {
+		return chance.last();
+	}
+}
+
+//UI
+function output(inp) {
+    $("#display").append(inp + "<br />");
+	scrolldown();
+}
+
+function talk_output(inp) {
+    $("#talk_console").append(inp + "<br />");
+	//scrolldown();
+}
+
+function input(inp) {
+	$("#inp").focus().select();//Highlight text
+	output(">" + inp);
+	var args = inp.split(" ");
+	console.log(args);
+	switch (args[0]) {
+		case "l": case "look": look(); break;
+		case "score": score(); break;
+		case "who": who_richest(); break;
+		case "clear": clear(); break;
+		case "navigation": case "nav": navigation(); break;
+		case "directory": directory(args); break;
+		case "equipment": case "eq": equipment(); break;
+		case "javascript": case "js": eval(args[1]); break;
+		case "doge": doge(); break;
+	}
+}
+
+function equipment() {
+	if (items[players[0].wearing_head] != undefined) { output("[Head] &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + items[players[0].wearing_head].name); }
+	else { output("[Head] &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Nothing"); }
+	if (items[players[0].wearing_neck] != undefined) { output("[Neck] &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + items[players[0].wearing_neck].name); }
+	else { output("[Neck] &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Nothing"); }
+	if (items[players[0].wearing_torso] != undefined) { output("[Torso] &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + items[players[0].wearing_torso].name); }
+	else { output("[Torso] &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Nothing"); }
+	if (items[players[0].wearing_waist] != undefined) { output("[Waist] &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + items[players[0].wearing_waist].name); }
+	else { output("[Waist] &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Nothing"); }
+	if (items[players[0].wearing_legs] != undefined) { output("[Legs] &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + items[players[0].wearing_legs].name); }
+	else { output("[Legs] &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Nothing"); }
+	if (items[players[0].wearing_hands] != undefined) { output("[Hands] &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + items[players[0].wearing_hands].name); }
+	else { output("[Hands] &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Nothing"); }
+	if (items[players[0].holding_left] != undefined) { output("[Left Hand] &nbsp;" + items[players[0].holding_left].name); }
+	else { output("[Left Hand] &nbsp;Nothing"); }
+	if (items[players[0].holding_right] != undefined) { output("[Right Hand] " + items[players[0].holding_right].name); }
+	else { output("[Right Hand] Nothing"); }
+}
+
+function update_display() {
+	$("#fullname").fadeIn("fast").html(players[0].first_name + " " + players[0].last_name);
+	$("#credits").fadeIn("fast").html(players[0].credits.formatMoney(0));
+	$("#location").fadeIn("fast").html(players[0].fulllocationString());
+}
+
+function update_navigation() {
+	//$('#navtable').append('<tr>');
+	
+	//Navigation
+	for (var s = 0; s < systems.length; s++) {
+		if (players[0].system == s) { 
+			$("#selectSystem").append('<option value="' + s + '" selected>' + systems[s].name + '</option>');
+		}
+		else {
+			$("#selectSystem").append('<option value="' + s + '">' + systems[s].name + '</option>');
+		}
+	}
+	for (var p = 0; p < planets.length; p++) {
+		if (planets[p].system == players[0].system) {
+			if (players[0].planet == p) {
+				$("#selectPlanet").append('<option value="' + p + '" selected>' + planets[p].name + '</option>');
+			}
+			else {
+				$("#selectPlanet").append('<option value="' + p + '">' + planets[p].name + '</option>');
+			}
+		}
+	}
+	for (var c = 0; c < cities.length; c++) {
+		if (cities[c].planet == players[0].planet) {
+			if (players[0].city == c) {
+				$("#selectCity").append('<option value="' + c + '" selected>' + cities[c].name + '</option>');
+			}
+			else {
+				$("#selectCity").append('<option value="' + c + '">' + cities[c].name + '</option>');
+			}
+		}
+	}
+	for (var l = 0; l < locations.length; l++) {
+		if (players[0].city == locations[l].city) {
+			$("#navtable").append("<tr><td>" + locations[l].proximity + "</td> <td>" + locations[l].building + "</td> <td>" + locations[l].owner + "</td><td><a href=\"javascript:players[0].travel(" + l + ")\">Travel</a></td></tr>");
+		}
+	}
+	
+	//Setup Table Sorter
+	$("#navigationTable").tablesorter( {sortList: [[0,0], [1,0]]} ); 
+}
+
+function scrolldown()
+{ 
+    var objDiv = document.getElementById("display");
+    objDiv.scrollTop = objDiv.scrollHeight;
+}   
+
+function clear() {//Clear the screen
+	$("#display").html("");
+}
+
+$(document).ready(function() {
+	$("#inp").focus().select();//Highlight input text
+
+	//Highlight input text on keyup
+	$('#inp').keyup(function(e) {
+        if(e.keyCode == 13) {
+			game.input = $("#inp").val();
+			input(game.input);
+        }		
+	});
+	
+	//Send Button
+	$("#submit").click(function() {
+		game.input = $("#inp").val();
+		input(game.input);
+	});
+	
+	//Clear Console
+	$("#clear").click(function() {
+		clear();
+	});
+});
+
+//Helpers
+Number.prototype.formatMoney = function(c, d, t){
+var n = this, 
+    c = isNaN(c = Math.abs(c)) ? 2 : c, 
+    d = d == undefined ? "." : d, 
+    t = t == undefined ? "," : t, 
+    s = n < 0 ? "-" : "", 
+    i = parseInt(n = Math.abs(+n || 0).toFixed(c)) + "", 
+    j = (j = i.length) > 3 ? j % 3 : 0;
+   return s + (j ? i.substr(0, j) + t : "") + i.substr(j).replace(/(\d{3})(?=\d)/g, "$1" + t) + (c ? d + Math.abs(n - i).toFixed(c).slice(2) : "");
+ };
+ 
+function formatRoman(num) {
+    if (!+num)
+        return false;
+    var digits = String(+num).split(""),
+        key = ["","C","CC","CCC","CD","D","DC","DCC","DCCC","CM",
+               "","X","XX","XXX","XL","L","LX","LXX","LXXX","XC",
+               "","I","II","III","IV","V","VI","VII","VIII","IX"],
+        roman = "",
+        i = 3;
+    while (i--)
+        roman = (key[+digits.pop() + (i * 10)] || "") + roman;
+    return Array(+digits.join("") + 1).join("M") + roman;
+}
+
+function doge() {
+	output("Such Space, Much Simulation... Wow");
+	output("░░░░░░░░░▄░░░░░░░░░░░░░░▄░░░░");
+	output("░░░░░░░░▌▒█░░░░░░░░░░░▄▀▒▌░░░");
+	output("░░░░░░░░▌▒▒█░░░░░░░░▄▀▒▒▒▐░░░");
+	output("░░░░░░░▐▄▀▒▒▀▀▀▀▄▄▄▀▒▒▒▒▒▐░░░");
+	output("░░░░░▄▄▀▒░▒▒▒▒▒▒▒▒▒█▒▒▄█▒▐░░░");
+	output("░░░▄▀▒▒▒░░░▒▒▒░░░▒▒▒▀██▀▒▌░░░");
+	output("░░▐▒▒▒▄▄▒▒▒▒░░░▒▒▒▒▒▒▒▀▄▒▒▌░░");
+	output("░░▌░░▌█▀▒▒▒▒▒▄▀█▄▒▒▒▒▒▒▒█▒▐░░");
+	output("░▐░░░▒▒▒▒▒▒▒▒▌██▀▒▒░░░▒▒▒▀▄▌░");
+	output("░▌░▒▄██▄▒▒▒▒▒▒▒▒▒░░░░░░▒▒▒▒▌░");
+	output("▀▒▀▐▄█▄█▌▄░▀▒▒░░░░░░░░░░▒▒▒▐░");
+	output("▐▒▒▐▀▐▀▒░▄▄▒▄▒▒▒▒▒▒░▒░▒░▒▒▒▒▌");
+	output("▐▒▒▒▀▀▄▄▒▒▒▄▒▒▒▒▒▒▒▒░▒░▒░▒▒▐░");
+	output("░▌▒▒▒▒▒▒▀▀▀▒▒▒▒▒▒░▒░▒░▒░▒▒▒▌░");
+	output("░▐▒▒▒▒▒▒▒▒▒▒▒▒▒▒░▒░▒░▒▒▄▒▒▐░░");
+	output("░░▀▄▒▒▒▒▒▒▒▒▒▒▒░▒░▒░▒▄▒▒▒▒▌░░");
+	output("░░░░▀▄▒▒▒▒▒▒▒▒▒▒▄▄▄▀▒▒▒▒▄▀░░░");
+	output("░░░░░░▀▄▄▄▄▄▄▀▀▀▒▒▒▒▒▄▄▀░░░░░");
+	output("░░░░░░░░░▒▒▒▒▒▒▒▒▒▒▀▀░░░░░░░░");
+}
+</script>
+</head>
+
+<body>
+<h1 style="font-family: Courier New; color: #008000;">SubFaction</h1>
+<strong>Name:</strong> <span id="fullname">Your Name</span> <strong>Credits:</strong> $<span id="credits">0</span> <strong>Tick:</strong> <span id="tick">0</span><br />
+<strong>Location:</strong> <span id="location"></span>
+<div id="tabs">
+<ul>
+	<li><a href="#console">Console</a></li>
+	<li><a href="#travel">Travel</a></li>
+	<li><a href="#assets">Assets</a></li>
+	<li><a href="#market">Market</a></li>
+	<li><a href="#settings">Settings</a></li>
+	<li><a href="#help">Help</a></li>
+	<li><a href="#about">About</a></li>
+</ul>
+<!--DIALOGS-->
+<div id="talk_dialog" title="Talk" style="display: none;">
+	<div id="talk_name" style="float: left;"></div>
+	<br />
+	<div id="talk_console" style="float: left;"></div>
+	<div id="talk_options" style="float: left;"></div>
+</div>
+<!--CONSOLE-->
+<div id="console">
+	<div id="display"></div><br />
+	<input id="inp" name="inp" type="text" />
+	<input id="submit" name="submit" type="button" value="Input" /><input id="clear" name="clear" type="button" value="Clear Console" /><br />
+</div>
+<!--TRAVEL-->
+<div id="travel">
+	System: <select id="selectSystem"><!-- <option value="audi">Audi</option> --></select>
+	Planet: <select id="selectPlanet"><!-- <option value="audi">Audi</option> --></select>
+	City: <select id="selectCity"><!-- <option value="audi">Audi</option> --></select>
+	<table id="navigationTable" class="tablesorter"> 
+	<thead> 
+	<tr> 
+		<th>Distance</th> 
+		<th>Location</th> 
+		<th>Owner</th> 
+		<th>Travel</th> 
+	</tr> 
+	</thead> 
+	<tbody id="navtable">
+	</tbody>
+	</table>
+</div>
+
+<!--ASSETS-->
+<div id="assets">
+<p>You have no assets.... you poor bastard.</p>
+</div>
+
+<!--MARKET-->
+<div id="market">
+<p>Nothing to see here people... move along</p>
+</div>
+
+<!--SETTINGS-->
+<div id="settings">
+<p>No settings currently available</p>
+</div>
+
+<!--HELP-->
+<div id="help">
+<p>Tabs</p>
+<ul>
+	<li><strong>Console</strong> - This is where you can play the majority of the game by typing in various commands as seen below</li>
+	<li><strong>Travel</strong> - This is where you can travel to different locations in game (Currently not fully programmed)</li>
+	<li><strong>Assets</strong> - This is where you can find your current assets (Currently not fully programmed)</li>
+	<li><strong>Market</strong> - This is where you can surf for products on the market around the universe. (Currently not fully programmed)</li>
+	<li><strong>Help</strong> - This is where you are at now.</li>
+	<li><strong>About</strong> - About the current iteration and progress of the game.</li>
+</ul>
+<p>Console Commands: </p>
+<ul>
+	<li><strong>look</strong> (l) - Shows current location and who is in that location with you.</li>
+	<li><strong>equipment</strong> (eq) - Shows what you are currently wearing.</li>
+	<li><strong>score</strong> - Shows detailed stats of your character and location.</li>
+	<li><strong>navigation</strong> (nav) - Beginning of a navigation system, simply shows the number of spacial entities the game has created.</li> 
+	<li><strong>directory</strong> - Directory is used for searching for other characters in game. Syntax: 'directory &lt;full name/partial name&gt;'</li> 
+	<li><strong>who</strong> - Shows a who is richest list of top 20 characters in the game.</li> 	
+</ul>
+</div>
+<!--ABOUT-->
+<div id="about">
+<p>SubFaction v.01</p>
+<p>
+<form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
+<input type="hidden" name="cmd" value="_s-xclick">
+<input type="hidden" name="hosted_button_id" value="HBF22MTSJRX4Q">
+<input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
+<img alt="" border="0" src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" width="1" height="1">
+</form>
+</p>
+<p>Donations are appreciated, however I cannot promise anything in return.  I will only say that donations will encourage me to continue working on the project.</p>
+<p>SubFaction is a personal hobby project of mine built to be a political/trade space simulator. This is a prototype and is barely functional. 
+I am planning on generating a procedural universe with unique characters from politicians to lowly scoundrels to secret double agents infiltrating corporations and governments. 
+The engine is entirely written in javascript uitilizing JQuery, JQuery-UI, Tablesorter-Plugin and Chance.js. Please be sure to use the latest upgraded version of your favorite browser. 
+Internet Explorer is not recommended as it's javascript engine is slow and I don't test in that browser. If your simulation becomes slow after some time, 
+try hitting clear console to clear the screen log. Please report bugs to adamcrochford@gmail.com</p>
+<p>The source code for this version is free, all I ask is you keep my name in the credits and provide a link back to subfaction.com.  If sufficient demand for a repository for the code ever becomes large enough, 
+maybe I'll finally learn how to use github. Simply view source in your browser for the source code.</p>
+<p>7-23-2014 - Finished basic item system, everyone now starts the game with some basic clothes.</p>
+<p>7-21-2014 - Added conversation dialog box.</p>
+<p>7-20-2014 - Implemented dumb AI, mobs now walk in and out of rooms randomly.  Fixed bug with genesis.</p>
+<p>7-16-2014 - Built change log.  Added JQuery-UI and seperated into tabs.</p>
+</div>
+</div>
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-53148804-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+</body>
+</html>
