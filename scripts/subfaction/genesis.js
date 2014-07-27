@@ -1,7 +1,7 @@
 //Genesis - Let there be some light, but mostly darkness.  We are creating the universe here in case you didn't notice.
 function genesis() {
 	output("Generating Big Bang...");
-	output("Let there be some light, but mostly darkness. - Caimen");
+	output("Let there be some light, but mostly darkness.");
 	
     game = Object();
     game.state = 0;
@@ -212,7 +212,10 @@ function genesis() {
 	
 	output ("UI finished...");
 	
-	output("Welcome to SubFaction version: Dysfunctional Prototype");
+	output("Welcome to SubFaction version: Dysfunctional Prototype <a target=\"_blank\" href=\"http://www.subfaction.com\">subfaction.com</a>");
+	output("Created by Adam Rochford (Caimen) 2014");
+	output("SubFaction is an open source project and is available on <a target=\"_blank\" href=\"https://github.com/caimen/subfaction\">github.com/caimen/subfaction</a>.");
+	output("SubFaction is licensed under <a target=\"_blank\" href=\"http://subfaction.com/LICENSE.txt\">GPL v3.0</a>.");
 	look();
 	state = 1;//Enter Name State
 	
