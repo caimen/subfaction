@@ -59,10 +59,10 @@ function Player(id) {
 	this.outputInventoryString = function() { 
 		for (var x = 0; x < this.inventory.length; x++) {
 			if (items[this.inventory[x]].type == "blueprint") {
-				output(items[this.inventory[x]].name + ' [' + items[this.inventory[x]].quantity + '] is here. <a href="javascript:construct(items[' + x + '])">Construct</a> <a href="javascript:drop(items[' + x + '])">Drop</a>'); 
+				output(items[this.inventory[x]].name + ' (' + items[this.inventory[x]].type + ') [' + items[this.inventory[x]].quantity + '] is here. <a href="javascript:construct(' + items[this.inventory[x]].id + ')">Construct</a>  <a href="javascript:items[' + this.inventory[x] + '].examine()">Examine</a> <a href="javascript:drop(items[' + x + '])">Drop</a>'); 
 			}
 			else {
-				output(items[this.inventory[x]].name + ' [' + items[this.inventory[x]].quantity + '] is here. <a href="javascript:drop(items[' + x + '])">Drop</a>'); 
+				output(items[this.inventory[x]].name + ' (' + items[this.inventory[x]].type + ') [' + items[this.inventory[x]].quantity + '] is here. <a href="javascript:items[' + this.inventory[x] + '].examine()">Examine</a> <a href="javascript:drop(items[' + x + '])">Drop</a>'); 
 			}
 		} 
 	}
@@ -72,7 +72,6 @@ function Player(id) {
 	this.cityString = function() { return cities[this.city].name; }
 	this.planetString = function() { return planets[this.planet].name; }
 	this.systemString = function() { return systems[this.system].name; }
-	this.travel = function (locationID) { return; }
 	this.fulllocationString = function() { return this.locationString() + ", City of " + this.cityString() + ", " + this.planetString() + " Planet, " + this.systemString() + " System"; };
 	this.travel = function(location_id) {
 		if (this.location == players[0].location) {
@@ -88,6 +87,11 @@ function Player(id) {
 		
 		if (players[0].location == this.location) {
 			output(this.name + " has walked into the room");
+		}
+		
+		if (this.id == 0) {
+			output("You walked into the room");
+			look();
 		}
 	}
 	this.AI = function() {

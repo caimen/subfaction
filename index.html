@@ -20,6 +20,7 @@
 <script type="text/javascript" src="scripts/subfaction/item.js"></script>
 <script type="text/javascript" src="scripts/subfaction/ship.js"></script>
 <script type="text/javascript" src="scripts/subfaction/building.js"></script>
+<script type="text/javascript" src="scripts/subfaction/image.js"></script>
 <script type="text/javascript" src="scripts/subfaction/genesis.js"></script>
 <script type="text/javascript">
 var console_debug_verbose = false;
@@ -34,24 +35,49 @@ var locations = [];
 var ships = [];
 var items = [];
 var item_types = [];//Kind of our database of basic items
+var location_construction = [];
+var images = [];
 //Global Variables
 var speed = 5000;
-$( document ).ready(function() {//All Systems Go
+$(document).ready(function() {//All Systems Go
+	$("#progressbar").progressbar({ value: 0 });
+	$("#loading_text").html("Loading UI...");	
+	
 	//UI SETUP
 	$("#tabs").tabs();
+	
+	$("#look").button().click(function( event ) { event.preventDefault(); look(); });
+	$("#inventory").button().click(function( event ) { event.preventDefault(); inventory(); });
+	$("#equipment").button().click(function( event ) { event.preventDefault(); equipment(); });
+	$("#score").button().click(function( event ) { event.preventDefault(); score(); });
+	$("#navigation").button().click(function( event ) { event.preventDefault(); navigation(); });
+	$("#who").button().click(function( event ) { event.preventDefault(); who(); });
+	
+	$("#progressbar").progressbar( "option", "value", 10 );
+	$("#loading_text").html("Starting Big Bang...");
+	
+	if (game.tick === undefined) {
+        genesis();
+    }
 	
 	//GAME START
 	setInterval(function(){gameLoop()},speed);
 });
 
-function gameLoop() {
-    if (game.tick === undefined) {
-        genesis();
-    }
-	
+function gameLoop() {    
 	//AI
 	for (var p = 0; p < players.length; p++) {
 		players[p].AI();
+	}
+	
+	//Check Construction Queues
+	for (var c = 0; c < location_construction.length; c++) {
+		if (locations[location_construction[c]].constructing_finish == game.tick) {
+			locations[location_construction[c]].building = locations[location_construction[c]].constructing;
+			locations[location_construction[c]].constructing = "";
+			locations[location_construction[c]].constructing_finish = 0;
+			output("You have finished building your " + locations[location_construction[c]].building + ".");
+		}
 	}
 	
     game.tick++;
@@ -61,6 +87,9 @@ function gameLoop() {
 
 function look() {
 	output("You look around you, you are at " + players[0].fulllocationString() + ".");
+	if (locations[players[0].location].constructing_finish != 0) {
+		output("A " + locations[players[0].location].constructing + " is being constructed here and will be finished in " + (locations[players[0].location].constructing_finish - game.tick) + " ticks.");
+	}
 	locations[players[0].location].outputInventoryString();
 	locations[players[0].location].outputPlayersString();
 }
@@ -128,7 +157,29 @@ function navigation() {
 }
 
 function construct(item_id) {
-	
+	var blueprint = items[item_id];
+	if (blueprint.type == "blueprint") {
+		if (blueprint.name = "small factory") {
+			if (locations[players[0].location].player_owner == 0) {
+				if (locations[players[0].location].constructing_finish == 0) {
+					if (locations[players[0].location].building == "empty plot") {
+						if (locations[players[0].location].checkResources(blueprint.mercadium, blueprint.torphyte, blueprint.zenophyte, blueprint.cylocyte, blueprint.psytanium, blueprint.ipsogen, blueprint.zorphyte, blueprint.nytonium)) {
+							locations[players[0].location].removeResources(blueprint.mercadium, blueprint.torphyte, blueprint.zenophyte, blueprint.cylocyte, blueprint.psytanium, blueprint.ipsogen, blueprint.zorphyte, blueprint.nytonium);
+							locations[players[0].location].constructing = blueprint.name;
+							locations[players[0].location].constructing_finish = game.tick + blueprint.ticks;
+							location_construction.push(players[0].location);
+							output("Construction has begun");
+							look();
+						}
+						else { return; }
+					}
+					else { output("You must be on an empty plot to build a building."); return; }
+				}
+				else { output("You are already constructing something here."); return; }
+			}
+			else { output("You must own this plot of land to build on it..."); return; }
+		}
+	}
 }
 
 function generate_name(type) {
@@ -171,21 +222,23 @@ function input(inp) {
 }
 
 function equipment() {
-	if (items[players[0].wearing_head] != undefined) { output("[Head] &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + items[players[0].wearing_head].name); }
+	if (items[players[0].wearing_head] != undefined) { output("[Head] &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + items[players[0].wearing_head].name + " <a href=\"javascript:items[" + items[players[0].wearing_head].id + "].examine()\">Examine</a>"); }
 	else { output("[Head] &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Nothing"); }
-	if (items[players[0].wearing_neck] != undefined) { output("[Neck] &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + items[players[0].wearing_neck].name); }
+	if (items[players[0].wearing_neck] != undefined) { output("[Neck] &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + items[players[0].wearing_neck].name + " <a href=\"javascript:items[" + items[players[0].wearing_neck].id + "].examine()\">Examine</a>"); }
 	else { output("[Neck] &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Nothing"); }
-	if (items[players[0].wearing_torso] != undefined) { output("[Torso] &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + items[players[0].wearing_torso].name); }
+	if (items[players[0].wearing_torso] != undefined) { output("[Torso] &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + items[players[0].wearing_torso].name + " <a href=\"javascript:items[" + items[players[0].wearing_torso].id + "].examine()\">Examine</a>"); }
 	else { output("[Torso] &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Nothing"); }
-	if (items[players[0].wearing_waist] != undefined) { output("[Waist] &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + items[players[0].wearing_waist].name); }
+	if (items[players[0].wearing_waist] != undefined) { output("[Waist] &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + items[players[0].wearing_waist].name + " <a href=\"javascript:items[" + items[players[0].wearing_waist].id + "].examine()\">Examine</a>"); }
 	else { output("[Waist] &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Nothing"); }
-	if (items[players[0].wearing_legs] != undefined) { output("[Legs] &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + items[players[0].wearing_legs].name); }
+	if (items[players[0].wearing_legs] != undefined) { output("[Legs] &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + items[players[0].wearing_legs].name + " <a href=\"javascript:items[" + items[players[0].wearing_legs].id + "].examine()\">Examine</a>"); }
 	else { output("[Legs] &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Nothing"); }
-	if (items[players[0].wearing_hands] != undefined) { output("[Hands] &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + items[players[0].wearing_hands].name); }
+	if (items[players[0].wearing_feet] != undefined) { output("[Feet] &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + items[players[0].wearing_feet].name + " <a href=\"javascript:items[" + items[players[0].wearing_feet].id + "].examine()\">Examine</a>"); }
+	else { output("[Feet] &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Nothing"); }
+	if (items[players[0].wearing_hands] != undefined) { output("[Hands] &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + items[players[0].wearing_hands].name + " <a href=\"javascript:items[" + items[players[0].wearing_hands].id + "].examine()\">Examine</a>"); }
 	else { output("[Hands] &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Nothing"); }
-	if (items[players[0].holding_left] != undefined) { output("[Left Hand] &nbsp;" + items[players[0].holding_left].name); }
+	if (items[players[0].holding_left] != undefined) { output("[Left Hand] &nbsp;" + items[players[0].holding_left].name + " <a href=\"javascript:items[" + items[players[0].holding_left].id + "].examine()\">Examine</a>"); }
 	else { output("[Left Hand] &nbsp;Nothing"); }
-	if (items[players[0].holding_right] != undefined) { output("[Right Hand] " + items[players[0].holding_right].name); }
+	if (items[players[0].holding_right] != undefined) { output("[Right Hand] " + items[players[0].holding_right].name + " <a href=\"javascript:items[" + items[players[0].holding_right].id + "].examine()\">Examine</a>"); }
 	else { output("[Right Hand] Nothing"); }
 }
 
@@ -229,7 +282,12 @@ function update_navigation() {
 	}
 	for (var l = 0; l < locations.length; l++) {
 		if (players[0].city == locations[l].city) {
-			$("#navtable").append("<tr><td>" + locations[l].proximity + "</td> <td>" + locations[l].building + "</td> <td>" + locations[l].owner + "</td><td><a href=\"javascript:players[0].travel(" + l + ")\">Travel</a></td></tr>");
+			if (locations[l].player_owner !== undefined) {
+				$("#navtable").append("<tr><td>" + locations[l].proximity + "</td> <td>" + locations[l].building + "</td> <td>" + players[locations[l].player_owner].name + "</td><td><a href=\"javascript:players[0].travel(" + l + ")\">Travel</a></td></tr>");
+			}
+			else {
+				$("#navtable").append("<tr><td>" + locations[l].proximity + "</td> <td>" + locations[l].building + "</td> <td>For Sale</td><td><a href=\"javascript:players[0].travel(" + l + ")\">Travel</a></td></tr>");
+			}
 		}
 	}
 	
@@ -317,6 +375,7 @@ function doge() {
 	output("░░░░▀▄▒▒▒▒▒▒▒▒▒▒▄▄▄▀▒▒▒▒▄▀░░░");
 	output("░░░░░░▀▄▄▄▄▄▄▀▀▀▒▒▒▒▒▄▄▀░░░░░");
 	output("░░░░░░░░░▒▒▒▒▒▒▒▒▒▒▀▀░░░░░░░░");
+	output("On second thought, let's not play SubFaction, tis a silly game.");
 }
 </script>
 </head>
@@ -325,6 +384,14 @@ function doge() {
 <h1 style="font-family: Courier New; color: #008000;">SubFaction</h1>
 <strong>Name:</strong> <span id="fullname">Your Name</span> <strong>Credits:</strong> $<span id="credits">0</span> <strong>Tick:</strong> <span id="tick">0</span><br />
 <strong>Location:</strong> <span id="location"></span>
+<div id="loading" style="width: 100%; height: 100%; opacity:0.85; position: absolute; left: 0px; top: 0px; background-color: #C0C0C0; color: black; z-index: 1;">
+	<div style="padding-top:260px; margin-left: 33%;">
+		<p>
+			<span id="loading_text"></span>...
+		</p>
+		<div id="progressbar" style="width: 50%;"></div>
+	</div>
+</div>
 <div id="tabs">
 <ul>
 	<li><a href="#console">Console</a></li>
@@ -342,17 +409,33 @@ function doge() {
 	<div id="talk_console" style="float: left;"></div>
 	<div id="talk_options" style="float: left;"></div>
 </div>
+<div id="item_dialog" title="Item" style="display: none;">
+	<div style="overflow-y: scroll; max-height: 300px;">
+	<h2 id="item_name"></h2>
+	<div id="item_image" style="float: right;"></div>
+	<p id="item_description" style="width: 266px"></p>
+	<h3>Properties</h3>
+	<ul id="item_properties" style="list-style-type: none;">
+	</ul>
+	</div>
+</div>
 <!--CONSOLE-->
 <div id="console">
+	<button id="look">Look</button>
+	<button id="inventory">Inventory</button>
+	<button id="equipment">Equipment</button>
+	<button id="score">Score</button>
+	<button id="navigation">Navigation</button>
+	<button id="who">Who</button>
 	<div id="display"></div><br />
 	<input id="inp" name="inp" type="text" />
 	<input id="submit" name="submit" type="button" value="Input" /><input id="clear" name="clear" type="button" value="Clear Console" /><br />
 </div>
 <!--TRAVEL-->
 <div id="travel">
-	System: <select id="selectSystem"><!-- <option value="audi">Audi</option> --></select>
-	Planet: <select id="selectPlanet"><!-- <option value="audi">Audi</option> --></select>
-	City: <select id="selectCity"><!-- <option value="audi">Audi</option> --></select>
+	System: <select id="selectSystem"></select>
+	Planet: <select id="selectPlanet"></select>
+	City: <select id="selectCity"></select>
 	<table id="navigationTable" class="tablesorter"> 
 	<thead> 
 	<tr> 
@@ -415,6 +498,8 @@ function doge() {
 <img alt="" border="0" src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" width="1" height="1">
 </form>
 </p>
+<p><iframe src="http://ghbtns.com/github-btn.html?user=caimen&repo=subfaction&type=watch&count=true&size=large"
+  allowtransparency="true" frameborder="0" scrolling="0" width="170" height="30"></iframe></iframe></p>
 <p>Donations are appreciated, however I cannot promise anything in return.  I will only say that donations will encourage me to continue working on the project.</p>
 <p>SubFaction is a personal hobby project of mine built to be a political/trade space simulator. This is a prototype and is barely functional. 
 I am planning on generating a procedural universe with unique characters from politicians to lowly scoundrels to secret double agents infiltrating corporations and governments. 
@@ -423,8 +508,9 @@ Internet Explorer is not recommended as it's javascript engine is slow and I don
 try hitting clear console to clear the screen log. Please report bugs to adamcrochford@gmail.com</p>
 <p>The source code for this version is free, all I ask is you keep my name in the credits and provide a link back to subfaction.com.  
 <a target="_blank" href="https://github.com/caimen/subfaction">SubFaction is now on github!</a></p>
-<p>7-27-2014 - Created inventory command, setup basic mineral for manufacturing.  Added ownership to players beginning location and a blueprint for a factory for basic manufacturing.</p>
-<p>7-26-2014 - Created repository on github.</p>
+<p>7-27-2014 - Created inventory command, setup basic mineral for manufacturing.  Added ownership to players beginning location and a blueprint for a factory for basic manufacturing.  Add examine command for items.  Added 
+icons and properties to items.  Fixed item instantiation bug.  Factory can now be fully constructed using blueprint in inventory and removes resources from the location to do so.  Started on loading screen.</p>
+<p>7-26-2014 - Created repository on github.  Added buttons for quick commands.  </p>
 <p>7-23-2014 - Finished basic item system, everyone now starts the game with some basic clothes.</p>
 <p>7-21-2014 - Added conversation dialog box.</p>
 <p>7-20-2014 - Implemented dumb AI, mobs now walk in and out of rooms randomly.  Fixed bug with genesis.</p>
@@ -439,7 +525,6 @@ try hitting clear console to clear the screen log. Please report bugs to adamcro
 
   ga('create', 'UA-53148804-1', 'auto');
   ga('send', 'pageview');
-
 </script>
 </body>
 </html>
