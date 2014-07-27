@@ -43,7 +43,7 @@ function Player(id) {
 	this.is_travel_start_tick = 0;//What tick we started on
 	
 	//AI
-	this.behavior = chance.pick(["business", "politics"]);//Overall Primary Objective in Life
+	this.behavior = chance.pick(["business", "politics", "military", "agent", "thief"]);//Overall Primary Objective in Life
 	
 	//Ease of Use Functions
 	this.is_mobile = function() {
@@ -56,7 +56,16 @@ function Player(id) {
 	if (console_debug_verbose) {
 		console.log("Created new player " + this.gender + " " + this.first_name + " " + this.last_name + " with " + this.credits + " Credits");
 	}
-	
+	this.outputInventoryString = function() { 
+		for (var x = 0; x < this.inventory.length; x++) {
+			if (items[this.inventory[x]].type == "blueprint") {
+				output(items[this.inventory[x]].name + ' [' + items[this.inventory[x]].quantity + '] is here. <a href="javascript:construct(items[' + x + '])">Construct</a> <a href="javascript:drop(items[' + x + '])">Drop</a>'); 
+			}
+			else {
+				output(items[this.inventory[x]].name + ' [' + items[this.inventory[x]].quantity + '] is here. <a href="javascript:drop(items[' + x + '])">Drop</a>'); 
+			}
+		} 
+	}
 	this.isFemale = function() { if (p.gender == "Female") { return true; } return false; }
 	this.isMale = function() { if (p.gender == "Male") { return true; } return false; }
 	this.locationString = function() { return locations[this.location].building; }

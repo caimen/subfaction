@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <title>SubFaction - The Political/Trade Simulator</title>
-<link rel="stylesheet" href="styles/main.css?id=7">
-<link rel="stylesheet" href="styles/style.css?id=1">
+<link rel="stylesheet" href="styles/main.css">
+<link rel="stylesheet" href="styles/style.css">
 <link rel="stylesheet" href="scripts/jquery-ui-1.11.0.custom/jquery-ui.min.css">
-<link rel="stylesheet" href="scripts/jquery-ui-1.11.0.custom/jquery-ui.theme.min">
-<link rel="stylesheet" href="scripts/jquery-ui-1.11.0.custom/jquery-ui.structure.min">
+<link rel="stylesheet" href="scripts/jquery-ui-1.11.0.custom/jquery-ui.theme.min.css">
+<link rel="stylesheet" href="scripts/jquery-ui-1.11.0.custom/jquery-ui.structure.min.css">
 <script type="text/javascript" src="scripts/jquery-ui-1.11.0.custom/external/jquery/jquery.js"></script>
 <script type="text/javascript" src="scripts/jquery-ui-1.11.0.custom/jquery-ui.min.js"></script>
 <script type="text/javascript" src="scripts/jquery.tablesorter.min.js"></script>
@@ -19,6 +19,7 @@
 <script type="text/javascript" src="scripts/subfaction/location.js"></script>
 <script type="text/javascript" src="scripts/subfaction/item.js"></script>
 <script type="text/javascript" src="scripts/subfaction/ship.js"></script>
+<script type="text/javascript" src="scripts/subfaction/building.js"></script>
 <script type="text/javascript" src="scripts/subfaction/genesis.js"></script>
 <script type="text/javascript">
 var console_debug_verbose = false;
@@ -33,12 +34,14 @@ var locations = [];
 var ships = [];
 var items = [];
 var item_types = [];//Kind of our database of basic items
+//Global Variables
+var speed = 5000;
 $( document ).ready(function() {//All Systems Go
 	//UI SETUP
 	$("#tabs").tabs();
 	
 	//GAME START
-	setInterval(function(){gameLoop()},5000);
+	setInterval(function(){gameLoop()},speed);
 });
 
 function gameLoop() {
@@ -58,7 +61,12 @@ function gameLoop() {
 
 function look() {
 	output("You look around you, you are at " + players[0].fulllocationString() + ".");
+	locations[players[0].location].outputInventoryString();
 	locations[players[0].location].outputPlayersString();
+}
+
+function inventory() {
+	players[0].outputInventoryString();
 }
 
 function score() {
@@ -119,6 +127,10 @@ function navigation() {
 	output("Locations: " + locations.length);
 }
 
+function construct(item_id) {
+	
+}
+
 function generate_name(type) {
 	if ("male_first_name") {
 		return chance.first();
@@ -151,6 +163,7 @@ function input(inp) {
 		case "clear": clear(); break;
 		case "navigation": case "nav": navigation(); break;
 		case "directory": directory(args); break;
+		case "inventory": case "i": inventory(); break;
 		case "equipment": case "eq": equipment(); break;
 		case "javascript": case "js": eval(args[1]); break;
 		case "doge": doge(); break;
@@ -382,7 +395,8 @@ function doge() {
 </ul>
 <p>Console Commands: </p>
 <ul>
-	<li><strong>look</strong> (l) - Shows current location and who is in that location with you.</li>
+	<li><strong>look</strong> (l) - Shows current location, who is in that location with you and items at your location.</li>
+	<li><strong>inventory</strong> (i) - Your personal inventory</li>
 	<li><strong>equipment</strong> (eq) - Shows what you are currently wearing.</li>
 	<li><strong>score</strong> - Shows detailed stats of your character and location.</li>
 	<li><strong>navigation</strong> (nav) - Beginning of a navigation system, simply shows the number of spacial entities the game has created.</li> 
@@ -409,6 +423,8 @@ Internet Explorer is not recommended as it's javascript engine is slow and I don
 try hitting clear console to clear the screen log. Please report bugs to adamcrochford@gmail.com</p>
 <p>The source code for this version is free, all I ask is you keep my name in the credits and provide a link back to subfaction.com.  
 <a target="_blank" href="https://github.com/caimen/subfaction">SubFaction is now on github!</a></p>
+<p>7-27-2014 - Created inventory command, setup basic mineral for manufacturing.  Added ownership to players beginning location and a blueprint for a factory for basic manufacturing.</p>
+<p>7-26-2014 - Created repository on github.</p>
 <p>7-23-2014 - Finished basic item system, everyone now starts the game with some basic clothes.</p>
 <p>7-21-2014 - Added conversation dialog box.</p>
 <p>7-20-2014 - Implemented dumb AI, mobs now walk in and out of rooms randomly.  Fixed bug with genesis.</p>
