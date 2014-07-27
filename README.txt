@@ -1,4 +1,7 @@
-SubFaction - Created by Adam Rochford aka Caimen (2014)
+Welcome to SubFaction version: Dysfunctional Prototype http://www.subfaction.com
+Created by Adam Rochford (Caimen) 2014
+SubFaction is an open source project and is available on http://github.com/caimen/subfaction
+SubFaction is licensed under GPL v3.0 http://subfaction.com/LICENSE.txt
 
 ABOUT
 SubFaction is a personal hobby project of mine built to be a political/trade space simulator. This is a prototype and is barely functional. 
@@ -13,5 +16,9 @@ SubFaction is licensed under GPL.  All I ask is you keep my name in the credits 
 INSTALL
 Everything should work right out of the box whether on a server or local machine.
 
+FEEDBACK
+Please send feedback to adamcrochford[@].gmail.com or fork or commit on github.
+
+FINALLY
 Thanks and Enjoy.
 
