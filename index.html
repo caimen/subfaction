@@ -21,7 +21,11 @@
 <script type="text/javascript" src="scripts/subfaction/ship.js"></script>
 <script type="text/javascript" src="scripts/subfaction/building.js"></script>
 <script type="text/javascript" src="scripts/subfaction/image.js"></script>
+<script type="text/javascript" src="scripts/subfaction/organization.js"></script>
 <script type="text/javascript" src="scripts/subfaction/genesis.js"></script>
+<script type="text/javascript" src="scripts/subfaction/army.js"></script>
+<script type="text/javascript" src="scripts/subfaction/regiment.js"></script>
+<script type="text/javascript" src="scripts/subfaction/war.js"></script>
 <script type="text/javascript">
 var console_debug_verbose = false;
 //Global Objects
@@ -37,6 +41,7 @@ var items = [];
 var item_types = [];//Kind of our database of basic items
 var location_construction = [];
 var images = [];
+var organizations = [];
 //Global Variables
 var speed = 5000;
 $(document).ready(function() {//All Systems Go
@@ -52,6 +57,7 @@ $(document).ready(function() {//All Systems Go
 	$("#score").button().click(function( event ) { event.preventDefault(); score(); });
 	$("#navigation").button().click(function( event ) { event.preventDefault(); navigation(); });
 	$("#who").button().click(function( event ) { event.preventDefault(); who_richest(); });
+	$("#organizations").button().click(function( event ) { event.preventDefault(); organizations_list(); });
 	
 	$("#progressbar").progressbar( "option", "value", 10 );
 	$("#loading_text").html("Starting Big Bang...");
@@ -182,6 +188,33 @@ function construct(item_id) {
 	}
 }
 
+function governments_list() {
+	for (g = 0; g < organizations.length; g++) {
+		if (organizations[g].is_government = true) {
+			if (organizations[g].is_republic) {
+				output("Republic of " + organizations[g].name + " lead by " + organizations[g].leader_title + " " + players[organizations[g].leader].name);
+			}
+			else if (organizations[g].is_dicatorship) {
+				output("Nation of " + organizations[g].name + " lead by " + organizations[g].leader_title + " " + players[organizations[g].leader].name);
+			}
+		}
+	}
+}
+
+function organizations_list() {
+	for (g = 0; g < organizations.length; g++) {
+		if (organizations[g].is_republic) {
+			output("Republic of " + organizations[g].name + " lead by " + organizations[g].leader_title + " " + players[organizations[g].leader].name);
+		}
+		else if (organizations[g].is_dicatorship) {
+			output("Nation of " + organizations[g].name + " lead by " + organizations[g].leader_title + " " + players[organizations[g].leader].name);
+		}
+		else {
+			output(organizations[g].name + " lead by " + organizations[g].leader_title + " " + players[organizations[g].leader].name);
+		}
+	}
+}
+
 function generate_name(type) {
 	if ("male_first_name") {
 		return chance.first();
@@ -216,6 +249,8 @@ function input(inp) {
 		case "directory": directory(args); break;
 		case "inventory": case "i": inventory(); break;
 		case "equipment": case "eq": equipment(); break;
+		case "governments": case "gov": governments_list(); break;
+		case "organizations": case "org": organizations_list(); break;
 		case "javascript": case "js": eval(args[1]); break;
 		case "doge": doge(); break;
 	}
@@ -398,6 +433,7 @@ function doge() {
 	<li><a href="#travel">Travel</a></li>
 	<li><a href="#assets">Assets</a></li>
 	<li><a href="#market">Market</a></li>
+	<li><a href="#lists">Lists</a></li>
 	<li><a href="#settings">Settings</a></li>
 	<li><a href="#help">Help</a></li>
 	<li><a href="#about">About</a></li>
@@ -427,6 +463,7 @@ function doge() {
 	<button id="score">Score</button>
 	<button id="navigation">Navigation</button>
 	<button id="who">Who</button>
+	<button id="organizations">Organizations</button>
 	<div id="display"></div><br />
 	<input id="inp" name="inp" type="text" />
 	<input id="submit" name="submit" type="button" value="Input" /><input id="clear" name="clear" type="button" value="Clear Console" /><br />
@@ -458,6 +495,10 @@ function doge() {
 <!--MARKET-->
 <div id="market">
 <p>Nothing to see here people... move along</p>
+</div>
+
+<!--LISTS-->
+<div id="lists">
 </div>
 
 <!--SETTINGS-->

@@ -48,7 +48,46 @@ function genesis() {
 	}
 	//Create Sectors
 	
-	//Create Organizations
+	//Create Governments
+	for (var x = 0; x <= 10; x++) {
+		var gname = chance.city();
+		var o = new Organization(organizations.length, gname);
+		o.credits = 500000;
+		o.is_government = true;
+		if (chance.bool()) {
+			o.is_republic = true;
+			o.leader_title = "President";
+		}
+		else {
+			o.is_dictatorship = true;
+			o.leader_title = "Supreme Leader";
+		}
+		o.leader = x;
+		organizations.push(o);
+		
+		var m = new Organization(organizations.length, "Armed Forces of " + gname);
+		m.credits = 500000;
+		m.is_military = true;
+		m.leader = x+10;
+		m.leader_title = "Marshal";
+		organizations.push(m);
+		
+		var n = new Organization(organizations.length, "Naval Forces of " + gname);
+		n.credits = 500000;
+		n.is_military = true;
+		n.leader = x+20;
+		n.leader_title = "Admiral";
+		organizations.push(n);
+		
+		var i = new Organization(organizations.length, "National Intelligence of " + gname);
+		i.credits = 500000;
+		i.is_military = true;
+		i.leader = x+30;
+		i.leader_title = "Chief";
+		organizations.push(i);
+		
+		//Add marines possibly for space drops
+	}
 	
 	$('#progressbar').progressbar({value: 75});
 	$("#loading_text").html("Placing Mobs...");

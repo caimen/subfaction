@@ -1,23 +1,41 @@
-function Organization() {
-	this.name = chance.pick(['Obsidian Order', 'New Conglomerate', 'Tal Shiar', 'Doodle Dobble Incorparted', 'Acme Inc.']);
+function Organization(id, name) {
+	this.id = id;
+	this.name = name;
 	this.credits = 0;
 	this.is_corporation = false;//An organization may only be a corporation, holding company, government or political party
-	this.is_holding_company = false;
+	this.is_holding_company = false;//Possibly have one company hold other companies
+	
+	//Government
 	this.is_government = false;
 	this.is_political_party = false;
-	this.is_federal_government = false;//Possibly Many Planets?
-	this.is_monarchy_government = false;
-	this.is_republic_government = false;
-	this.planets = [];	
+	this.is_dictatorship = false;
+	this.is_republic = false;
+	//Sub Government Properties
+	this.is_military = false;
+	this.is_navy = false;
+	this.is_intelligence = false;
+	this.is_research = false;
+	this.force_limit = 0;
+	
+	this.leader_title = "";
+	this.leader = undefined;
+	this.tax_property = 5;
+	this.tax_sales = 5;
 	
 	if (console_debug_verbose) {
 		console.log("Created new organization " + this.name);
 	}
 	
+	//Subfactions
+	this.intelligence = undefined;
+	this.military = undefined;
+	this.navy = undefined;
+	this.research = undefined;
+	
 	//Corporation Stats
-	this.property = [];//Array to Items
+	this.assets = [];//Array to Items
 	
 	//Government Stats
-	this.stability = 0;
-	this.has_core_on_planets = [];
+	this.stability = 1;
+	this.has_core_on_cities = [];
 }
