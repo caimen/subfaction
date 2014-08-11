@@ -28,3 +28,14 @@ body {
 #inp {
 	width: 400px;
 }
+
+/*Map Stuff*/
+.maptext {
+	display: none;
+	height: 400px;
+	overflow: auto;
+	position: absolute;
+	right: 0;
+	top: 0;
+	width: 300px;
+}

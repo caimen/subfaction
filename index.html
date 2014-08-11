@@ -12,6 +12,7 @@
 <script type="text/javascript" src="scripts/jquery-ui-1.11.0.custom/jquery-ui.min.js"></script>
 <script type="text/javascript" src="scripts/jquery.tablesorter.min.js"></script>
 <script type="text/javascript" src="scripts/chance.js"></script>
+<script type="text/javascript" src="scripts/raphael.js"></script>
 <script type="text/javascript" src="scripts/subfaction/player.js"></script>
 <script type="text/javascript" src="scripts/subfaction/system.js"></script>
 <script type="text/javascript" src="scripts/subfaction/planet.js"></script>
@@ -73,7 +74,7 @@ $(document).ready(function() {//All Systems Go
 function gameLoop() {    
 	//AI
 	for (var p = 0; p < players.length; p++) {
-		players[p].AI();
+		players[p].AI();//All AI is fired from here may want webworkers eventually?
 	}
 	
 	//Check Construction Queues
@@ -373,7 +374,11 @@ var n = this,
     i = parseInt(n = Math.abs(+n || 0).toFixed(c)) + "", 
     j = (j = i.length) > 3 ? j % 3 : 0;
    return s + (j ? i.substr(0, j) + t : "") + i.substr(j).replace(/(\d{3})(?=\d)/g, "$1" + t) + (c ? d + Math.abs(n - i).toFixed(c).slice(2) : "");
- };
+};
+
+function distance(x, y, x0, y0){
+    return Math.round(Math.sqrt((x -= x0) * x + (y -= y0) * y));
+}; 
  
 function formatRoman(num) {
     if (!+num)
@@ -455,6 +460,16 @@ function doge() {
 	</ul>
 	</div>
 </div>
+<div id="city_dialog" title="Item" style="display: none;">
+	<div style="overflow-y: scroll; max-height: 300px;">
+	<h2 id="city_name"></h2>
+	<div id="city_image" style="float: right;"></div>
+	<p id="city_description" style="width: 266px"></p>
+	<h3>Properties</h3>
+	<ul id="city_properties" style="list-style-type: none;">
+	</ul>
+	</div>
+</div>
 <!--CONSOLE-->
 <div id="console">
 	<button id="look">Look</button>
@@ -473,6 +488,83 @@ function doge() {
 	System: <select id="selectSystem"></select>
 	Planet: <select id="selectPlanet"></select>
 	City: <select id="selectCity"></select>
+	<div id="canvas">
+            <div id="paper"></div>
+            <div id="nsw" class="maptext">
+                <h2>New South Wales</h2>
+                <p>
+                    New South Wales (abbreviated as NSW) is Australia’s oldest and most populous state, located in the south-east of the
+                    country, north of Victoria and south of Queensland. It was founded in 1788 and originally comprised much of the
+                    Australian mainland, as well as Lord Howe Island and Norfolk Island. New Zealand was not initially part of the colony,
+                    although when Britain annexed New Zealand in 1840 it was briefly a part of New South Wales. During the 19th century
+                    large areas were successively separated to form the British colonies of Tasmania, South Australia, Victoria,
+                    Queensland, and New Zealand.
+                </p>
+            </div>
+            <div id="vic" class="maptext">
+                <h2>Victoria</h2>
+                <p>
+                    Victoria is a state located in the south-eastern corner of Australia. It is the smallest mainland state in area but
+                    the most densely populated and urbanised. Prior to European settlement, some 30,000 Indigenous Australians lived in
+                    the area now occupied by the state. By contrast, over five million people now inhabit the region. European settlement
+                    in Victoria began in the 1830s as a farming community. Victoria is the second most populous Australian state, after New South Wales, with
+                    an estimated population of 5,205,200 as of June 2007. Melbourne is Victoria’s capital and largest city, with more
+                    than 70% of all Victorians living there.
+                </p>
+            </div>
+            <div id="wa" class="maptext">
+                <h2>Western Australia</h2>
+                <p>
+                    Western Australia is a state occupying the entire western third of the Australian continent. The nation’s largest
+                    state and the second largest sub-national entity in the world, it has 2.1 million inhabitants (10% of the national
+                    total), 85% of whom live in the south-west corner of the state. The people of Western Australia are often
+                    colloquially referred to as sand-gropers, the common name of an insect found on sand dunes around Perth.
+                </p>
+            </div>
+            <div id="sa" class="maptext">
+                <h2>South Australia</h2>
+                <p>
+                    South Australia is a state of Australia in the southern central part of the country. It covers some of the most arid
+                    parts of the continent; with a total land area of 983,482 square kilometres, it is the fourth largest
+                    of Australia’s six states and two territories. It is bordered to the west by Western Australia, to the north by the
+                    Northern Territory and Queensland, to the east by Queensland, New South Wales and Victoria, and along the south by
+                    the Great Australian Bight and the Southern Ocean. With nearly 1.6 million people, the state comprises less than
+                    10% of the Australian population and ranks fifth in population among the states and territories.
+                </p>
+            </div>
+            <div id="nt" class="maptext">
+                <h2>Northern Territory</h2>
+                <p>
+                    The Northern Territory is a federal territory of Australia, occupying much of the center of the mainland continent,
+                    as well as the central northern regions. It shares borders with Western Australia to the west, South Australia to the
+                    south, and Queensland to the east. To the north, the territory is bordered by the Timor Sea, the Arafura Sea and the
+                    Gulf of Carpentaria. Despite its large area — over 1,349,129 square kilometres, making it the third
+                    largest Australian federal division — it is sparsely populated. With a population of 218,380 it is the least populous
+                    division in the country.
+                </p>
+            </div>
+            <div id="qld" class="maptext">
+                <h2>Queensland</h2>
+                <p>
+                    Queensland is a state of Australia, occupying the north-eastern corner of the mainland continent. It is bordered by
+                    the Northern Territory to the west, South Australia to the south-west and New South Wales to the south. To the east,
+                    Queensland is bordered by the Coral Sea and Pacific Ocean. The state is Australia’s second largest by area, following
+                    Western Australia, and the country's third most populous after New South Wales and Victoria.
+                </p>
+            </div>
+            <div id="tas" class="maptext">
+                <h2>Tasmania</h2>
+                <p>
+                    Tasmania is an Australian island and state of the same name. It is located 240 kilometres south of the
+                    eastern side of the continent, being separated from it by Bass Strait. The state of Tasmania includes the island of
+                    Tasmania and other surrounding islands. Tasmania has an estimated population of 494,520 (March 2008) and an area
+                    of 68,401 square kilometres.
+                    Tasmania is promoted as the Natural State and the "Island of Inspiration" owing to its large and relatively
+                    unspoiled natural environment. The island is 364 kilometres long from the northernmost point to the southernmost point and 306
+                    kilometres from west to east.
+                </p>
+            </div>
+        </div>
 	<table id="navigationTable" class="tablesorter"> 
 	<thead> 
 	<tr> 
@@ -549,6 +641,7 @@ Internet Explorer is not recommended as it's javascript engine is slow and I don
 try hitting clear console to clear the screen log. Please report bugs to adamcrochford@gmail.com</p>
 <p>The source code for this version is free, all I ask is you keep my name in the credits and provide a link back to subfaction.com.  
 <a target="_blank" href="https://github.com/caimen/subfaction">SubFaction is now on github!</a></p>
+<p>8-9-2014 - Added Raphael JS for purposes of displaying maps of planets with cities on them.  Randomly generating x, y coordinates for cities on planets.  Much more work before next commit.</p>
 <p>7-29-2014 - Added the basis for government, wars, regiments and armies.  Very basic start for these things, a lot needs to be done on this front.</p>
 <p>7-26-2014 - Created repository on github.  Added buttons for quick commands.  </p>
 <p>7-27-2014 - Created inventory command, setup basic mineral for manufacturing.  Added ownership to players beginning location and a blueprint for a factory for basic manufacturing.  Add examine command for items.  Added 

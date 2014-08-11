@@ -113,7 +113,5 @@ function Item(id, name, type) {
 		
 		//UI ready
 		$("#item_dialog").dialog({ minWidth: 500 });
-		
-
 	}
 }

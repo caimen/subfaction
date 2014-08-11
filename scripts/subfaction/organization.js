@@ -10,6 +10,7 @@ function Organization(id, name) {
 	this.is_political_party = false;
 	this.is_dictatorship = false;
 	this.is_republic = false;
+	this.color = chance.color({format: 'hex'});
 	//Sub Government Properties
 	this.is_military = false;
 	this.is_navy = false;
